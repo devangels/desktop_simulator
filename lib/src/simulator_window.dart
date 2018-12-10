@@ -3,20 +3,50 @@ import 'dart:math' as math;
 import 'package:desktop_simulator/desktop_simulator.dart';
 import 'package:desktop_simulator/src/flutter/message_codec.dart';
 import 'package:desktop_simulator/src/flutter/message_codecs.dart';
+import 'package:desktop_simulator/src/plugins/plugin.dart';
 
 final jsonMethodCodec = const JSONMethodCodec();
 
-class DesktopWindow implements EngineDelegate {
-  DesktopWindow._();
+
+/// An interface which is exposed to the plugins.
+///
+/// This includes everything that is necessary to communicate with the underlying system and the window.
+abstract class NativeView {
+
+  Window get window;
+
+  // TODO probably don't want to expose the engine
+  FlutterEngine get engine;
+}
+
+
+
+/// The actual desktop window
+///
+/// This class is the bridge between the Flutter Engine and GLFW
+class DesktopWindow implements EngineDelegate, NativeView {
+
+
+  DesktopWindow._() {
+    //TODO not the right place
+    plugins.add(TextInputPlugin(this));
+    // TODO no init done yet. Decide where to put that
+  }
+
 
   Window _window;
   FlutterEngine _engine;
 
   bool _dragging = false;
-  int _clientId;
-  String _text;
 
   static const pixelRatio = 1.5;
+
+  Window get window => _window;
+  FlutterEngine get engine => _engine;
+
+
+  /// TODO make this dynamic
+  List<Plugin> plugins = [];
 
   static DesktopWindow createSnapshotMode({
     int width,
@@ -51,10 +81,11 @@ class DesktopWindow implements EngineDelegate {
       _instance._window.dispose();
       return null;
     }
+
+
     _instance._engine.sendWindowMetricsEvent(WindowMetricsEvent(width, height, pixelRatio));
     _instance._engine.flushPendingTasks();
     window.setWindowSizeCallback(_instance._onSizeChanged);
-    window.setKeyCallback(_instance._onKey);
     window.setMouseButtonCallback(_instance._onMouseButton);
     window.setScrollCallback(_instance._onScroll);
     window.centerOnMonitor();
@@ -124,75 +155,17 @@ class DesktopWindow implements EngineDelegate {
           }
           break;
       }
-    } else if (message.channel == 'flutter/desktop') {
-      switch (methodCall.method) {
-        case 'title_drag_start':
-          // Windows Only!
-          final pt = _window.getCursorPos();
-          _sendPointerEvent(PointerPhase.up, pt.x, pt.y);
-          _window.setCursorPosCallback(null);
-          win32ReleaseCapture();
-          win32SendMessage(_window.getWin32Handle(), 0x00A1 /*WM_NCLBUTTONDOWN*/, 2 /*HTCAPTION*/, 0);
-          break;
+    }
 
-        case 'minimize':
-          _window.iconify();
-          break;
-
-        case 'maximize':
-          if (_window.getWindowAttribute(GLFW_MAXIMIZED) != 0) {
-            _window.restore();
-          } else {
-            _window.maximize();
-          }
-          break;
-
-        case 'close':
-          _window.shouldClose = true;
-          break;
-      }
-    } else if (message.channel == 'flutter/textinput') {
-      switch (methodCall.method) {
-        case 'TextInput.setClient':
-          _clientId = methodCall.arguments[0];
-          break;
-        case 'TextInput.clearClient':
-          _clientId = -1;
-          break;
-        case 'TextInput.setEditingState':
-          _text = methodCall.arguments['text'];
-          // composingBase, composingExtent
-          break;
+    for(Plugin plugin in plugins) {
+      if(message.channel == plugin.channel) {
+        plugin.onMethodCall(methodCall);
+        break;
       }
     }
   }
 
-  void _onKey(Window window, int key, int scanCode, int action, int mods) {
-    print('$this.onKey($window, $key, $scanCode, $action, $mods)');
-    if (_clientId != -1 && (action == GLFW_RELEASE || action == GLFW_REPEAT)) {
-      if ((key >= GLFW_KEY_A && key <= GLFW_KEY_Z) || key == GLFW_KEY_SPACE) {
-        int charCode = key;
-        if ((mods & 1) == 0) {
-          charCode |= 0x20;
-        }
-        _text = _text + String.fromCharCode(charCode);
-      } else if (key == GLFW_KEY_BACKSPACE) {
-        _text = _text.substring(0, math.max(0, _text.length - 1));
-      }
 
-      final textUpdate = new MethodCall("TextInputClient.updateEditingState", [
-        _clientId,
-        {
-          'text': _text,
-          "selectionBase": _text.length,
-          "selectionExtent": _text.length,
-          "composingBase": _text.length,
-          "composingExtent": _text.length,
-        },
-      ]);
-      _engine.sendPlatformMessage('flutter/textinput', jsonMethodCodec.encodeMethodCall(textUpdate));
-    }
-  }
 
   @override
   String toString() => 'DesktopWindow(${identityCode(this)})';
