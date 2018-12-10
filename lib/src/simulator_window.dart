@@ -90,8 +90,6 @@ class DesktopWindow implements EngineDelegate, NativeView {
   }
 
 
-
-
   void run() {
     while (!_window.shouldClose) {
       Glfw.waitEventsTimeout(0.1);
@@ -104,26 +102,10 @@ class DesktopWindow implements EngineDelegate, NativeView {
   @override
   void platformMessage(PlatformMessage message) {
     final MethodCall methodCall = jsonMethodCodec.decodeMethodCall(message.asByteData);
-    if (message.channel == 'flutter/platform') {
-      switch (methodCall.method) {
-        case 'SystemChrome.setApplicationSwitcherDescription':
-          String label = methodCall.arguments['label'];
-          int primaryColor = methodCall.arguments['primaryColor'];
-          _window.setTitle(label);
-          message.responseSuccess();
-          break;
-
-        case 'SystemSound.play':
-          var soundType = methodCall.arguments.toString();
-          if (soundType == 'SystemSoundType.click') {
-            // System.Media.SystemSounds.Beep.Play();
-          }
-          break;
-      }
-    }
     for(Plugin plugin in plugins) {
       if(message.channel == plugin.channel) {
-        plugin.onMethodCall(methodCall);
+        Result result = ResultImpl(_engine, jsonMethodCodec, message.channel, methodCall.method);
+        plugin.onMethodCall(methodCall, result);
         break;
       }
     }

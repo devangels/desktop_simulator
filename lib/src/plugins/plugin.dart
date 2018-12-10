@@ -1,7 +1,51 @@
 import 'package:desktop_simulator/desktop_simulator.dart';
 import 'package:desktop_simulator/src/flutter/message_codec.dart';
+import 'package:desktop_simulator/src/flutter/message_codecs.dart';
 import 'package:desktop_simulator/src/simulator_window.dart';
 import 'dart:math' as math;
+
+
+// TODO move this somewhere else
+abstract class Result {
+
+  void success(Map object);
+
+  void error(String var1,  String var2, Object var3);
+
+  void notImplemented();
+}
+
+// TODO this needs cleanup
+class ResultImpl implements Result {
+
+  ResultImpl(this._engine, this.codec, this.channel, this.method);
+
+  final FlutterEngine _engine;
+
+  final JSONMethodCodec codec;
+
+  final String method;
+
+  final String channel;
+
+  @override
+  void error(String var1, String var2, Object var3) {
+    throw UnimplementedError();
+  }
+
+  @override
+  void notImplemented() {
+    throw UnimplementedError();
+  }
+
+  @override
+  void success(Map object) {
+    _engine.sendPlatformMessage(channel, codec.encodeMethodCall(MethodCall(method, object)));
+  }
+
+}
+
+
 
 
 /// A plugin which has access to the [NativeView] the the underlying OS.
@@ -16,7 +60,7 @@ abstract class Plugin {
 
   void init();
 
-  void onMethodCall(MethodCall methodCall);
+  void onMethodCall(MethodCall methodCall, Result result);
 
   String get channel;
 
@@ -49,7 +93,7 @@ class TextInputPlugin extends Plugin {
   }
 
   @override
-  void onMethodCall(MethodCall methodCall) {
+  void onMethodCall(MethodCall methodCall, Result result) {
     switch (methodCall.method) {
       case 'TextInput.setClient':
         _clientId = methodCall.arguments[0];
@@ -135,7 +179,7 @@ class MousePlugin extends Plugin with SendPointerEventMixin {
   }
 
   @override
-  void onMethodCall(MethodCall methodCall) {}
+  void onMethodCall(MethodCall methodCall, Result result) {}
 
 }
 
@@ -175,7 +219,7 @@ class DesktopPlugin extends Plugin with SendPointerEventMixin{
   }
 
   @override
-  void onMethodCall(MethodCall methodCall) {
+  void onMethodCall(MethodCall methodCall, Result result) {
     switch (methodCall.method) {
       case 'title_drag_start':
       // Windows Only!
@@ -199,6 +243,38 @@ class DesktopPlugin extends Plugin with SendPointerEventMixin{
         break;
       case 'close':
         nativeView.window.shouldClose = true;
+        break;
+    }
+  }
+
+}
+
+class PlatformPlugin extends Plugin {
+  PlatformPlugin(NativeView nativeView) : super(nativeView);
+
+  @override
+  String get channel => 'flutter/platform';
+
+  @override
+  void init() {
+
+  }
+
+  @override
+  void onMethodCall(MethodCall methodCall, Result result) {
+    switch (methodCall.method) {
+      case 'SystemChrome.setApplicationSwitcherDescription':
+        String label = methodCall.arguments['label'];
+        int primaryColor = methodCall.arguments['primaryColor'];
+        nativeView.window.setTitle(label);
+        result.success(null);
+        break;
+
+      case 'SystemSound.play':
+        var soundType = methodCall.arguments.toString();
+        if (soundType == 'SystemSoundType.click') {
+          // System.Media.SystemSounds.Beep.Play();
+        }
         break;
     }
   }
