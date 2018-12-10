@@ -31,7 +31,9 @@ class DesktopWindow implements EngineDelegate, NativeView {
   DesktopWindow._(this._width, this._height) {
     //TODO not the right place
     plugins.add(TextInputPlugin(this));
-    plugins.forEach((it) => it.init());
+    plugins.add(MousePlugin(this));
+    plugins.add(DesktopPlugin(this));
+    plugins.add(PlatformPlugin(this));
   }
   Window _window;
   FlutterEngine _engine;
@@ -63,6 +65,7 @@ class DesktopWindow implements EngineDelegate, NativeView {
     height = (height * pixelRatio).toInt();
 
     final _instance = DesktopWindow._(width, height);
+
     //Glfw.windowHint(GLFW_DECORATED, 0);
     Glfw.windowHint(GLFW_RESIZABLE, 1);
     final window = Glfw.createWindow(width, height, title, Monitor.None, Window.None);
@@ -84,13 +87,22 @@ class DesktopWindow implements EngineDelegate, NativeView {
       _instance._window.dispose();
       return null;
     }
+
+
     _instance._engine.flushPendingTasks();
     window.centerOnMonitor();
     return _instance;
   }
 
 
+  void initPlugins() {
+    plugins.forEach((it) => it.init());
+
+  }
+
+
   void run() {
+    initPlugins();
     while (!_window.shouldClose) {
       Glfw.waitEventsTimeout(0.1);
       _engine.flushPendingTasks();
