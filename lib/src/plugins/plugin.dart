@@ -55,19 +55,21 @@ abstract class Plugin {
 
   Plugin(this.nativeView);
 
-
   final NativeView nativeView;
+
+  String get channel;
 
   void init();
 
   void onMethodCall(MethodCall methodCall, Result result);
 
-  String get channel;
 
 }
 
 
-mixin SendPointerEventMixin on Plugin {
+mixin SendPointerEventMixin {
+
+  NativeView get nativeView;
 
   void _sendPointerEvent(PointerPhase phase, double x, double y) {
     final timestamp = Duration(microseconds: (Glfw.instance.time * 1000000).toInt());
@@ -141,8 +143,8 @@ class TextInputPlugin extends Plugin {
 
 
 class MousePlugin extends Plugin with SendPointerEventMixin {
-  MousePlugin(NativeView nativeView) : super(nativeView);
 
+  MousePlugin(NativeView nativeView) : super(nativeView);
 
   bool _dragging = false;
 
@@ -269,7 +271,6 @@ class PlatformPlugin extends Plugin {
         nativeView.window.setTitle(label);
         result.success(null);
         break;
-
       case 'SystemSound.play':
         var soundType = methodCall.arguments.toString();
         if (soundType == 'SystemSoundType.click') {
