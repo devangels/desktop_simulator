@@ -11,5 +11,7 @@ dependencies:
   #flutter:
   #  path: 'C:/Android/flutter/packages/flutter'
 
+  archive: ^2.0.4
+
 dev_dependencies:
   test: ^1.0.0
