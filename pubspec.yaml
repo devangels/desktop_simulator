@@ -1,0 +1,15 @@
+name: desktop_simulator
+description: A sample command-line application.
+# version: 1.0.0
+# homepage: https://www.example.com
+# author: Simon <email@example.com>
+
+environment:
+  sdk: '>=2.0.0 <3.0.0'
+
+dependencies:
+  #flutter:
+  #  path: 'C:/Android/flutter/packages/flutter'
+
+dev_dependencies:
+  test: ^1.0.0
