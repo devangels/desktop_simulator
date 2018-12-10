@@ -95,6 +95,50 @@ class TextInputPlugin extends Plugin {
 
 }
 
+
+class MousePlugin extends Plugin with SendPointerEventMixin {
+  MousePlugin(NativeView nativeView) : super(nativeView);
+
+
+  bool _dragging = false;
+
+  // Has no channel because it cannot receive input
+  @override
+  String get channel => "";
+
+  @override
+  void init() {
+    nativeView.window.setMouseButtonCallback(_onMouseButton);
+  }
+
+  void _onCursorPosChanged(Window window, double x, double y) {
+    _sendPointerEvent(PointerPhase.move, x, y);
+  }
+
+
+  void _onMouseButton(Window window, int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_1) {
+      if (_dragging) {
+        if (action == GLFW_RELEASE) {
+          _dragging = false;
+        }
+      } else if (action == GLFW_PRESS) {
+        final pt = nativeView.window.getCursorPos();
+        _sendPointerEvent(PointerPhase.down, pt.x, pt.y);
+        nativeView.window.setCursorPosCallback(_onCursorPosChanged);
+      } else if (action == GLFW_RELEASE) {
+        final pt = nativeView.window.getCursorPos();
+        _sendPointerEvent(PointerPhase.up, pt.x, pt.y);
+        nativeView.window.setCursorPosCallback(null);
+      }
+    }
+  }
+
+  @override
+  void onMethodCall(MethodCall methodCall) {}
+
+}
+
 class DesktopPlugin extends Plugin with SendPointerEventMixin{
   DesktopPlugin(NativeView nativeView) : super(nativeView);
 
@@ -104,6 +148,30 @@ class DesktopPlugin extends Plugin with SendPointerEventMixin{
 
   @override
   void init() {
+    nativeView.engine.sendWindowMetricsEvent(WindowMetricsEvent(nativeView.width, nativeView.height, nativeView.pixelRatio2));
+    nativeView.window.setWindowSizeCallback(_onSizeChanged);
+    nativeView.window.setScrollCallback(_onScroll);
+
+  }
+
+
+  void _onSizeChanged(Window window, int width, int height) {
+    nativeView.engine.sendWindowMetricsEvent(WindowMetricsEvent(width, height, nativeView.pixelRatio2));
+  }
+
+
+  void _onScroll(Window window, double xOffset, double yOffset) {
+    print('$this.onScroll($window, $xOffset, $yOffset)');
+
+    final timestamp = Duration(microseconds: (Glfw.instance.time * 1000000).toInt());
+    final scollUpdate = new MethodCall("onPositionChanged",
+      {
+        'timeStamp': timestamp,
+        "physicalX": xOffset,
+        "physicalY": yOffset,
+      },
+    );
+    nativeView.engine.sendPlatformMessage(channel, jsonMethodCodec.encodeMethodCall(scollUpdate));
   }
 
   @override

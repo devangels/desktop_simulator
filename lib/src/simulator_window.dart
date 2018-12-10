@@ -7,7 +7,6 @@ import 'package:desktop_simulator/src/plugins/plugin.dart';
 
 final jsonMethodCodec = const JSONMethodCodec();
 
-
 /// An interface which is exposed to the plugins.
 ///
 /// This includes everything that is necessary to communicate with the underlying system and the window.
@@ -17,9 +16,11 @@ abstract class NativeView {
 
   // TODO probably don't want to expose the engine
   FlutterEngine get engine;
+
+  double get pixelRatio2;
+  int get height;
+  int get width;
 }
-
-
 
 /// The actual desktop window
 ///
@@ -27,23 +28,25 @@ abstract class NativeView {
 class DesktopWindow implements EngineDelegate, NativeView {
 
 
-  DesktopWindow._() {
+  DesktopWindow._(this._width, this._height) {
     //TODO not the right place
     plugins.add(TextInputPlugin(this));
-    // TODO no init done yet. Decide where to put that
+    plugins.forEach((it) => it.init());
   }
-
-
   Window _window;
   FlutterEngine _engine;
-
-  bool _dragging = false;
 
   static const pixelRatio = 1.5;
 
   Window get window => _window;
   FlutterEngine get engine => _engine;
 
+  int get width => _width;
+  int get height => _height;
+  double get pixelRatio2 => pixelRatio;
+
+  final int _width;
+  final int _height;
 
   /// TODO make this dynamic
   List<Plugin> plugins = [];
@@ -59,7 +62,7 @@ class DesktopWindow implements EngineDelegate, NativeView {
     width = (width * pixelRatio).toInt();
     height = (height * pixelRatio).toInt();
 
-    final _instance = DesktopWindow._();
+    final _instance = DesktopWindow._(width, height);
     //Glfw.windowHint(GLFW_DECORATED, 0);
     Glfw.windowHint(GLFW_RESIZABLE, 1);
     final window = Glfw.createWindow(width, height, title, Monitor.None, Window.None);
@@ -81,51 +84,13 @@ class DesktopWindow implements EngineDelegate, NativeView {
       _instance._window.dispose();
       return null;
     }
-
-
-    _instance._engine.sendWindowMetricsEvent(WindowMetricsEvent(width, height, pixelRatio));
     _instance._engine.flushPendingTasks();
-    window.setWindowSizeCallback(_instance._onSizeChanged);
-    window.setMouseButtonCallback(_instance._onMouseButton);
-    window.setScrollCallback(_instance._onScroll);
     window.centerOnMonitor();
     return _instance;
   }
 
-  void _onSizeChanged(Window window, int width, int height) {
-    _engine.sendWindowMetricsEvent(WindowMetricsEvent(width, height, pixelRatio));
-  }
 
-  void _onMouseButton(Window window, int button, int action, int mods) {
-    if (button == GLFW_MOUSE_BUTTON_1) {
-      if (_dragging) {
-        if (action == GLFW_RELEASE) {
-          _dragging = false;
-        }
-      } else if (action == GLFW_PRESS) {
-        final pt = _window.getCursorPos();
-        _sendPointerEvent(PointerPhase.down, pt.x, pt.y);
-        _window.setCursorPosCallback(_onCursorPosChanged);
-      } else if (action == GLFW_RELEASE) {
-        final pt = _window.getCursorPos();
-        _sendPointerEvent(PointerPhase.up, pt.x, pt.y);
-        _window.setCursorPosCallback(null);
-      }
-    }
-  }
 
-  void _onCursorPosChanged(Window window, double x, double y) {
-    _sendPointerEvent(PointerPhase.move, x, y);
-  }
-
-  void _sendPointerEvent(PointerPhase phase, double x, double y) {
-    final timestamp = Duration(microseconds: (Glfw.instance.time * 1000000).toInt());
-    _engine.sendPointerEvent(PointerEvent(phase, timestamp, x, y));
-  }
-
-  void _onScroll(Window window, double xOffset, double yOffset) {
-    print('$this.onScroll($window, $xOffset, $yOffset)');
-  }
 
   void run() {
     while (!_window.shouldClose) {
@@ -156,7 +121,6 @@ class DesktopWindow implements EngineDelegate, NativeView {
           break;
       }
     }
-
     for(Plugin plugin in plugins) {
       if(message.channel == plugin.channel) {
         plugin.onMethodCall(methodCall);
@@ -164,8 +128,6 @@ class DesktopWindow implements EngineDelegate, NativeView {
       }
     }
   }
-
-
 
   @override
   String toString() => 'DesktopWindow(${identityCode(this)})';
