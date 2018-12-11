@@ -7,6 +7,7 @@ void main(List<String> arguments) {
   u.tryUpdating();
 }
 
+// TODO linux and mac
 class Updater {
   Updater(this.verbose);
 

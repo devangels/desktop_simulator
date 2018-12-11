@@ -4,7 +4,6 @@ import 'package:desktop_simulator/src/flutter/message_codecs.dart';
 import 'package:desktop_simulator/src/simulator_window.dart';
 import 'dart:math' as math;
 
-
 // TODO move this somewhere else
 abstract class Result {
 
@@ -62,7 +61,6 @@ abstract class Plugin {
   void init();
 
   void onMethodCall(MethodCall methodCall, Result result);
-
 
 }
 
