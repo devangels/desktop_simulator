@@ -31,14 +31,14 @@ class DesktopWindow implements EngineDelegate, NativeView {
   DesktopWindow._(this._width, this._height) {
     //TODO not the right place
     plugins.add(TextInputPlugin(this));
-    plugins.add(MousePlugin(this));
     plugins.add(DesktopPlugin(this));
     plugins.add(PlatformPlugin(this));
+    plugins.add(CursorPlugin(this));
   }
   Window _window;
   FlutterEngine _engine;
 
-  static const pixelRatio = 1.5;
+  static const pixelRatio = 1.0;
 
   Window get window => _window;
   FlutterEngine get engine => _engine;

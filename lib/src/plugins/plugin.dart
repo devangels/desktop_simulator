@@ -140,49 +140,6 @@ class TextInputPlugin extends Plugin {
 }
 
 
-class MousePlugin extends Plugin with SendPointerEventMixin {
-
-  MousePlugin(NativeView nativeView) : super(nativeView);
-
-  bool _dragging = false;
-
-  // Has no channel because it cannot receive input
-  @override
-  String get channel => "";
-
-  @override
-  void init() {
-    nativeView.window.setMouseButtonCallback(_onMouseButton);
-  }
-
-  void _onCursorPosChanged(Window window, double x, double y) {
-    _sendPointerEvent(PointerPhase.move, x, y);
-  }
-
-
-  void _onMouseButton(Window window, int button, int action, int mods) {
-    if (button == GLFW_MOUSE_BUTTON_1) {
-      if (_dragging) {
-        if (action == GLFW_RELEASE) {
-          _dragging = false;
-        }
-      } else if (action == GLFW_PRESS) {
-        final pt = nativeView.window.getCursorPos();
-        _sendPointerEvent(PointerPhase.down, pt.x, pt.y);
-        nativeView.window.setCursorPosCallback(_onCursorPosChanged);
-      } else if (action == GLFW_RELEASE) {
-        final pt = nativeView.window.getCursorPos();
-        _sendPointerEvent(PointerPhase.up, pt.x, pt.y);
-        nativeView.window.setCursorPosCallback(null);
-      }
-    }
-  }
-
-  @override
-  void onMethodCall(MethodCall methodCall, Result result) {}
-
-}
-
 class DesktopPlugin extends Plugin with SendPointerEventMixin{
   DesktopPlugin(NativeView nativeView) : super(nativeView);
 
@@ -190,11 +147,16 @@ class DesktopPlugin extends Plugin with SendPointerEventMixin{
   @override
   String get channel => 'flutter/desktop';
 
+  bool _dragging = false;
+
+
   @override
   void init() {
     nativeView.engine.sendWindowMetricsEvent(WindowMetricsEvent(nativeView.width, nativeView.height, nativeView.pixelRatio2));
     nativeView.window.setWindowSizeCallback(_onSizeChanged);
     nativeView.window.setScrollCallback(_onScroll);
+    nativeView.window.setMouseButtonCallback(_onMouseButton);
+    nativeView.window.setCursorPosCallback(_onCursorPosChanged);
 
   }
 
@@ -208,14 +170,42 @@ class DesktopPlugin extends Plugin with SendPointerEventMixin{
     print('$this.onScroll($window, $xOffset, $yOffset)');
 
     final timestamp = Duration(microseconds: (Glfw.instance.time * 1000000).toInt());
-    final scollUpdate = new MethodCall("onPositionChanged",
+    final scollUpdate = new MethodCall("onScrolled",
       {
-        'timeStamp': timestamp,
-        "physicalX": xOffset,
-        "physicalY": yOffset,
+        'timeStamp': timestamp.inMicroseconds,
+        "xOffset": xOffset,
+        "yOffset": yOffset,
       },
     );
     nativeView.engine.sendPlatformMessage(channel, jsonMethodCodec.encodeMethodCall(scollUpdate));
+  }
+
+
+  void _onMouseButton(Window window, int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_1) {
+      if (action == GLFW_PRESS) {
+        final pt = nativeView.window.getCursorPos();
+        _sendPointerEvent(PointerPhase.down, pt.x, pt.y);
+        _dragging = true;
+      } else if (action == GLFW_RELEASE) {
+        final pt = nativeView.window.getCursorPos();
+        _sendPointerEvent(PointerPhase.up, pt.x, pt.y);
+        _dragging = false;
+      }
+    }
+  }
+
+  void _onCursorPosChanged(Window window, double x, double y) {
+    if(_dragging) {
+      _sendPointerEvent(PointerPhase.move, x, y);
+    }
+
+    Map hoverEvent = {
+      "physicalX": x,
+      "physicalY": y,
+    };
+    nativeView.engine.sendPlatformMessage(channel, jsonMethodCodec.encodeMethodCall(MethodCall("onPositionChanged", hoverEvent)));
+
   }
 
   @override
@@ -244,6 +234,24 @@ class DesktopPlugin extends Plugin with SendPointerEventMixin{
       case 'close':
         nativeView.window.shouldClose = true;
         break;
+    }
+  }
+
+}
+
+class CursorPlugin extends Plugin {
+  CursorPlugin(NativeView nativeView) : super(nativeView);
+
+  @override
+  String get channel => "Cursor";
+
+  @override
+  void init() {}
+
+  @override
+  void onMethodCall(MethodCall methodCall, Result result) {
+    if(methodCall.method == "changeCursor") {
+      // TODO implement
     }
   }
 

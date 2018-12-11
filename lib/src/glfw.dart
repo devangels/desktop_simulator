@@ -69,6 +69,8 @@ class Window {
 
   int getWindowAttribute(int attribute) native "glfwGetWindowAttrib";
 
+  //TODO implement set cursor
+
   void centerOnMonitor() {
     final videoMode = glfw.primaryMonitor.videoMode;
     final size = this.size;

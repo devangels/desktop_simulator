@@ -7,6 +7,7 @@ void main(List<String> arguments) {
   // First arg is asset path
   // the rest can be forwarded to commandLineArgs
 
+  print("Started with args: $arguments");
   String assetPath;
   if(arguments.length > 0) {
     assetPath = arguments[0];
