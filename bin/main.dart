@@ -4,11 +4,19 @@ import 'package:desktop_simulator/src/simulator_window.dart';
 
 void main(List<String> arguments) {
 
+  // First arg is asset path
+  // the rest can be forwarded to commandLineArgs
+
+  String assetPath = arguments[0];
+  List<String> cmdArgs = arguments.sublist(1);
+
+
   if (glfw.init()) {
     final window = DesktopWindow.createSnapshotMode(
       width: 375, height: 625, title: "Flutter Demo",
-      assetPath: "flutter_assets", icuDataPath: "icudtl.dat",
-      commandLineArgs: [ "app", "--dart-non-checked-mode" ],
+      assetPath: assetPath, icuDataPath: "icudtl.dat",
+      commandLineArgs: cmdArgs,
+    //  commandLineArgs: [ "app", "--dart-non-checked-mode" ],
     );
     window.run();
     glfw.terminate();
