@@ -7,7 +7,13 @@ void main(List<String> arguments) {
   // First arg is asset path
   // the rest can be forwarded to commandLineArgs
 
-  String assetPath = arguments[0];
+  String assetPath;
+  if(arguments.length > 0) {
+    assetPath = arguments[0];
+  } else {
+    print("Could not find Flutter assets");
+    return;
+  }
   List<String> cmdArgs = arguments.sublist(1);
 
 

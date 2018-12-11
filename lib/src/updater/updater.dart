@@ -41,6 +41,7 @@ class Updater {
 
 
   bool _needsUpdate() {
+    return true;
 
   }
 
