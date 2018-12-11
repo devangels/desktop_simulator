@@ -15,11 +15,8 @@ class Updater {
 
   final bool verbose;
 
-  void tryUpdating() async {
-    if(_needsUpdate()) {
-      await _update();
-    }
-  }
+  final String engineHashFile = "last_engine_version.dat";
+
 
   printV(String it) {
     if(verbose) {
@@ -28,7 +25,7 @@ class Updater {
   }
 
   // TODO take a look at how to tools handle verbosity
-  void _update() async {
+  void tryUpdating() async {
 
     printV("Seaching for Flutter...");
     ProcessResult results = await Process.run('where flutter', []);
@@ -48,17 +45,18 @@ class Updater {
     String engineHash = await _getEngineHash(directory);
     printV("Found engine hash: $engineHash");
 
-    File icuDat = _getICUDatFile(directory);
-
-
-    String destinationDirectory = File(Platform.script.toString()).parent.parent.parent.parent.path;
-    if(destinationDirectory.startsWith("file:///")) {
-      destinationDirectory = destinationDirectory.substring("file:///".length);
+    if(!_needsUpdate(engineHash)) {
+      printV("Didn't need update, finished");
+      return;
     }
 
-    printV("Copying ${icuDat.path} to $destinationDirectory ...");
+    _saveEngineHash(engineHash);
 
-    await icuDat.copy("$destinationDirectory${ps}icudtl.dat");
+    File icuDat = _getICUDatFile(directory);
+
+    printV("Copying ${icuDat.path} to ${File("icudtl.dat").absolute.path} ...");
+
+    await icuDat.copy("icudtl.dat");
 
     File engineZip = await _downloadEngine(engineHash);
     File extractedEngine = _extractEngine(engineZip);
@@ -66,10 +64,26 @@ class Updater {
     await engineZip.delete();
   }
 
+  void _saveEngineHash(String hash) {
+    File lastEngineVersion = File(engineHashFile);
 
-  bool _needsUpdate() {
-    return true;
+    if(!lastEngineVersion.existsSync()) {
+      lastEngineVersion.createSync();
+    }
+    lastEngineVersion.writeAsStringSync(hash, flush: true);
+  }
 
+
+  bool _needsUpdate(String flutterEngineHash) {
+    File lastEngineVersion = File(engineHashFile);
+
+    // No last version, download and set up
+    if(!lastEngineVersion.existsSync()) {
+      printV("Didnt find $engineHashFile, updating ...");
+      return true;
+    }
+
+    return flutterEngineHash != lastEngineVersion.readAsStringSync();
   }
 
   Future<String> _getEngineHash(String flutterPath) async {
