@@ -16,12 +16,12 @@ class Updater {
 
   final bool verbose;
 
-  final String engineHashFile = "last_engine_version.dat";
+  final String engineHashFile = "last_engine.stamp";
 
 
   printV(String it) {
     if(verbose) {
-      print(it);
+      stdout.write(it);
     }
   }
 
@@ -40,29 +40,31 @@ class Updater {
     String firstLine = res.split("\n")[0];
     List<String> it = p.context.split(firstLine);
     String directory = it.getRange(0, it.length - 1).join("$ps");
-    printV("Found Flutter at $directory");
+    printV("Found Flutter at $directory\n");
 
-    printV("Seaching for engine hash...");
+    printV("Seaching for engine hash...\n");
     String engineHash = await _getEngineHash(directory);
-    printV("Found engine hash: $engineHash");
+    printV("Found engine hash: $engineHash\n");
 
     if(!_needsUpdate(engineHash)) {
-      printV("Didn't need update, finished");
+      printV("Didn't need update, finished\n");
       return;
     }
 
-    _saveEngineHash(engineHash);
 
     File icuDat = _getICUDatFile(directory);
 
-    printV("Copying ${icuDat.path} to ${File("icudtl.dat").absolute.path} ...");
+    printV("Copying ${icuDat.path} to ${File("icudtl.dat").absolute.path} ...\n");
 
     await icuDat.copy("icudtl.dat");
 
     File engineZip = await _downloadEngine(engineHash);
     File extractedEngine = _extractEngine(engineZip);
-    printV("Finished extracting the engine, cleaning up ...");
+    printV("Finished extracting the engine, cleaning up ...\n");
     await engineZip.delete();
+
+    _saveEngineHash(engineHash);
+
   }
 
   void _saveEngineHash(String hash) {
@@ -80,7 +82,7 @@ class Updater {
 
     // No last version, download and set up
     if(!lastEngineVersion.existsSync()) {
-      printV("Didnt find $engineHashFile, updating ...");
+      printV("Didnt find $engineHashFile, updating ...\n");
       return true;
     }
 
@@ -116,7 +118,7 @@ class Updater {
 
 
   File _extractEngine(File zipFile) {
-    printV("Extracting the flutter_engine.dll ...");
+    printV("Extracting the flutter_engine.dll ...\n");
 
     // Read the Zip file from disk.
     List<int> bytes = zipFile.readAsBytesSync();
@@ -128,7 +130,7 @@ class Updater {
     for (ArchiveFile file in archive) {
       String filename = file.name;
       if (file.isFile && filename == "flutter_engine.dll") {
-        printV("Found flutter_engine.dll in archive");
+        printV("Found flutter_engine.dll in archive\n");
         List<int> data = file.content;
         return File(filename)
           ..createSync(recursive: true)
@@ -146,11 +148,11 @@ class Updater {
   Future<File> _downloadEngine(String engineHash) async {
     File embedder = File('windows-x64-embedder.zip');
     String url = 'https://storage.googleapis.com/flutter_infra/flutter/$engineHash/windows-x64/windows-x64-embedder.zip';
-    printV("Downloading $url ...");
+    printV("Downloading $url ...\n");
     HttpClientRequest request = await HttpClient().getUrl(Uri.parse(url));
     HttpClientResponse response = await request.close();
     int contentLength = response.contentLength;
-    printV("Need to download $contentLength bytes");
+    printV("Need to download $contentLength bytes\n");
 
     int currentBytes = 0;
     int currentPercentage = 0;
@@ -159,13 +161,14 @@ class Updater {
       currentBytes += it.length;
       int newPercentage = ((currentBytes / contentLength) * 100).floor();
       if(currentPercentage != newPercentage) {
-        printV("At $newPercentage %");
+        printV("\rAt $newPercentage %");
       }
       currentPercentage = newPercentage;
 
       return it;
     }).pipe(embedder.openWrite());
-    printV("Finished downloading the engine zip");
+    // The first \n is because we didn't put a \n above
+    printV("\nFinished downloading the engine zip\n");
     return embedder;
   }
 
