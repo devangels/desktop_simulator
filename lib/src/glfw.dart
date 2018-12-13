@@ -57,6 +57,9 @@ class Window {
 
   Point<double> getCursorPos() native "glfwGetCursorPos";
 
+  // TODO is causes a tiny memory leak until glfwTerminate is called. This should be returned to Dart to destroy.
+  void setCursor(int cursorCode) native "glfwSetCursor";
+
   void setTitle(String title) native "glfwSetWindowTitle";
 
   void iconify() native "glfwIconifyWindow";
