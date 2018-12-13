@@ -6,17 +6,15 @@ import 'dart:math' as math;
 
 // TODO move this somewhere else
 abstract class Result {
-
   void success(Map object);
 
-  void error(String var1,  String var2, Object var3);
+  void error(String var1, String var2, Object var3);
 
   void notImplemented();
 }
 
 // TODO this needs cleanup
 class ResultImpl implements Result {
-
   ResultImpl(this._engine, this.codec, this.channel, this.method);
 
   final FlutterEngine _engine;
@@ -41,17 +39,12 @@ class ResultImpl implements Result {
   void success(Map object) {
     _engine.sendPlatformMessage(channel, codec.encodeMethodCall(MethodCall(method, object)));
   }
-
 }
-
-
-
 
 /// A plugin which has access to the [NativeView] the the underlying OS.
 ///
 ///
 abstract class Plugin {
-
   Plugin(this.nativeView);
 
   final NativeView nativeView;
@@ -61,12 +54,9 @@ abstract class Plugin {
   void init();
 
   void onMethodCall(MethodCall methodCall, Result result);
-
 }
 
-
 mixin SendPointerEventMixin {
-
   NativeView get nativeView;
 
   void _sendPointerEvent(PointerPhase phase, double x, double y) {
@@ -76,12 +66,10 @@ mixin SendPointerEventMixin {
 }
 
 class TextInputPlugin extends Plugin {
-
   TextInputPlugin(NativeView nativeView) : super(nativeView);
 
   int _clientId;
   String _text;
-
 
   @override
   String get channel => 'flutter/textinput';
@@ -89,7 +77,6 @@ class TextInputPlugin extends Plugin {
   @override
   void init() {
     nativeView.window.setKeyCallback(_onKey);
-
   }
 
   @override
@@ -107,7 +94,6 @@ class TextInputPlugin extends Plugin {
         break;
     }
   }
-
 
   void _onKey(Window window, int key, int scanCode, int action, int mods) {
     print('$this.onKey($window, $key, $scanCode, $action, $mods)');
@@ -136,19 +122,15 @@ class TextInputPlugin extends Plugin {
       nativeView.engine.sendPlatformMessage('flutter/textinput', jsonMethodCodec.encodeMethodCall(textUpdate));
     }
   }
-
 }
 
-
-class DesktopPlugin extends Plugin with SendPointerEventMixin{
+class DesktopPlugin extends Plugin with SendPointerEventMixin {
   DesktopPlugin(NativeView nativeView) : super(nativeView);
-
 
   @override
   String get channel => 'flutter/desktop';
 
   bool _dragging = false;
-
 
   @override
   void init() {
@@ -157,20 +139,18 @@ class DesktopPlugin extends Plugin with SendPointerEventMixin{
     nativeView.window.setScrollCallback(_onScroll);
     nativeView.window.setMouseButtonCallback(_onMouseButton);
     nativeView.window.setCursorPosCallback(_onCursorPosChanged);
-
   }
-
 
   void _onSizeChanged(Window window, int width, int height) {
     nativeView.engine.sendWindowMetricsEvent(WindowMetricsEvent(width, height, nativeView.pixelRatio2));
   }
 
-
   void _onScroll(Window window, double xOffset, double yOffset) {
     print('$this.onScroll($window, $xOffset, $yOffset)');
 
     final timestamp = Duration(microseconds: (Glfw.instance.time * 1000000).toInt());
-    final scollUpdate = new MethodCall("onScrolled",
+    final scollUpdate = new MethodCall(
+      "onScrolled",
       {
         'timeStamp': timestamp.inMicroseconds,
         "xOffset": xOffset,
@@ -179,7 +159,6 @@ class DesktopPlugin extends Plugin with SendPointerEventMixin{
     );
     nativeView.engine.sendPlatformMessage(channel, jsonMethodCodec.encodeMethodCall(scollUpdate));
   }
-
 
   void _onMouseButton(Window window, int button, int action, int mods) {
     if (button == GLFW_MOUSE_BUTTON_1) {
@@ -196,7 +175,7 @@ class DesktopPlugin extends Plugin with SendPointerEventMixin{
   }
 
   void _onCursorPosChanged(Window window, double x, double y) {
-    if(_dragging) {
+    if (_dragging) {
       _sendPointerEvent(PointerPhase.move, x, y);
     }
 
@@ -205,14 +184,13 @@ class DesktopPlugin extends Plugin with SendPointerEventMixin{
       "physicalY": y,
     };
     nativeView.engine.sendPlatformMessage(channel, jsonMethodCodec.encodeMethodCall(MethodCall("onPositionChanged", hoverEvent)));
-
   }
 
   @override
   void onMethodCall(MethodCall methodCall, Result result) {
     switch (methodCall.method) {
       case 'title_drag_start':
-      // Windows Only!
+        // Windows Only!
         final pt = nativeView.window.getCursorPos();
         _sendPointerEvent(PointerPhase.up, pt.x, pt.y);
         nativeView.window.setCursorPosCallback(null);
@@ -236,11 +214,19 @@ class DesktopPlugin extends Plugin with SendPointerEventMixin{
         break;
     }
   }
-
 }
 
 class CursorPlugin extends Plugin {
   CursorPlugin(NativeView nativeView) : super(nativeView);
+
+  static const Map cursors = {
+    "Arrow": 0x00036001,
+    "Beam": 0x00036002,
+    "Crosshair": 0x00036003,
+    "Hand": 0x00036004,
+    "ResizeX": 0x00036005,
+    "ResizeY": 0x00036006,
+  };
 
   @override
   String get channel => "Cursor";
@@ -250,11 +236,12 @@ class CursorPlugin extends Plugin {
 
   @override
   void onMethodCall(MethodCall methodCall, Result result) {
-    if(methodCall.method == "changeCursor") {
-      // TODO implement
+    if (methodCall.method == "changeCursor") {
+      nativeView.window.setCursor(cursors[methodCall.arguments["cursor"]]);
+    } else if(methodCall.method == "resetCursor") {
+      nativeView.window.setCursor(cursors["Arrow"]);
     }
   }
-
 }
 
 class PlatformPlugin extends Plugin {
@@ -264,9 +251,7 @@ class PlatformPlugin extends Plugin {
   String get channel => 'flutter/platform';
 
   @override
-  void init() {
-
-  }
+  void init() {}
 
   @override
   void onMethodCall(MethodCall methodCall, Result result) {
@@ -285,5 +270,4 @@ class PlatformPlugin extends Plugin {
         break;
     }
   }
-
 }
