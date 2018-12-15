@@ -7,6 +7,7 @@ void main(List<String> arguments) {
 
   // First arg is asset path
   // the rest can be forwarded to commandLineArgs
+
   
   ArgParser parser = ArgParser();
 
@@ -14,14 +15,37 @@ void main(List<String> arguments) {
     valueHelp: "WIDTH", defaultsTo: "400");
   parser.addOption("height", abbr: "h", help: "The height of this window in pixels",
     valueHelp: "HEIGHT", defaultsTo: "600");
-  parser.addOption("assetsPath", abbr: "ap", help: "The absolute path to the asset directory "
+  parser.addOption("assetsPath", help: "The absolute path to the asset directory "
       "built by runing flutter build asset");
   // TODO not used right now
-  parser.addOption("dpi", abbr: "dpi", help: "The DPI of the app, if not set this is calculated NOT USED RIGHT NOW",
+  parser.addOption("dpi", help: "The DPI of the app, if not set this is calculated NOT USED RIGHT NOW",
     valueHelp: "DPI");
 
+
+  /// These are only here because the parser needs ever arguments that is possible. There needs to be a better solution to this
+
+  List<String> restArgs = [];
+  parser.addFlag('dart-main', defaultsTo: false);
+  parser.addFlag('enable-dart-profiling', defaultsTo: false);
+  parser.addFlag('enable-checked-mode', defaultsTo: false);
+  parser.addFlag('start-paused', defaultsTo: false);
+  parser.addFlag('skia-deterministic-rendering', defaultsTo: false);
+  parser.addFlag('use-test-fonts', defaultsTo: false);
+  parser.addOption('observatory-port', defaultsTo: "");
+  ///
+
+
   ArgResults results = parser.parse(arguments);
-  List<String> restArgs = results.rest;
+
+  ///
+  results['dart-main']? restArgs.add('--dart-main'): null;
+  results['enable-dart-profiling']? restArgs.add('--enable-dart-profiling'): null;
+  results['enable-checked-mode']? restArgs.add('--enable-checked-mode'): null;
+  results['start-paused']? restArgs.add('--start-paused'): null;
+  results['skia-deterministic-rendering']? restArgs.add('--skia-deterministic-rendering'): null;
+  results['use-test-fonts']? restArgs.add('--use-test-fonts'): null;
+  restArgs.add('observatory-port=${results['observatory-port']}');
+  ///
 
   String stringWidth = results["width"];
   String stringHeight = results["height"];

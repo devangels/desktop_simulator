@@ -1,0 +1,14 @@
+{  
+   "devices":[  
+      {  
+         "name":"Small",
+         "width":400,
+         "height":600
+      },
+      {  
+         "name":"Big",
+         "width":700,
+         "height":1000
+      }
+   ]
+}
