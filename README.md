@@ -36,13 +36,22 @@ So we decided to stay close to how Flutter itself is installed.
 ```
 git clone x...x...x
 ```
-### 2. Run flutter-desktop setup
+
+### 2. Download C++ runtime 
+From https://visualstudio.microsoft.com/de/downloads/ download the C++ runtime for your system.
+
+64 bit version is [here] (https://aka.ms/vs/15/release/VC_redist.x64.exe)
+
+32 bit version is [here] (https://aka.ms/vs/15/release/VC_redist.x86.exe)
+
+
+### 3. Run flutter-desktop setup
 This will create a few environment variables in your system
 ```
 flutter-desktop setup
 ```
 
-### 3. Override the default target platform in your app
+### 4. Override the default target platform in your app
 ```dart
     import 'package:flutter/foundation.dart'
         show debugDefaultTargetPlatformOverride;
