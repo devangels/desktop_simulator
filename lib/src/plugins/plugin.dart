@@ -71,6 +71,8 @@ class TextInputPlugin extends Plugin {
   int _clientId;
   String _text;
 
+  String get _nullSafeText => _text?? "";
+
   @override
   String get channel => 'flutter/textinput';
 
@@ -103,9 +105,9 @@ class TextInputPlugin extends Plugin {
         if ((mods & 1) == 0) {
           charCode |= 0x20;
         }
-        _text = _text + String.fromCharCode(charCode);
+        _text = _nullSafeText + String.fromCharCode(charCode);
       } else if (key == GLFW_KEY_BACKSPACE) {
-        _text = _text.substring(0, math.max(0, _text.length - 1));
+        _text = _nullSafeText.substring(0, math.max(0, _text.length - 1));
       }
 
       final textUpdate = new MethodCall("TextInputClient.updateEditingState", [
