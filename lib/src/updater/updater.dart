@@ -26,7 +26,7 @@ class Updater {
   }
 
   // TODO take a look at how to tools handle verbosity
-  void tryUpdating() async {
+  Future tryUpdating() async {
 
     printV("Seaching for Flutter...");
     ProcessResult results = await Process.run('where flutter', []);

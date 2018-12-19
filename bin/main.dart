@@ -1,25 +1,30 @@
 import 'package:desktop_simulator/desktop_simulator.dart';
 import 'package:desktop_simulator/src/simulator_window.dart';
 import 'package:args/args.dart';
+import 'package:desktop_simulator/src/updater/updater.dart';
 
 
 void main(List<String> arguments) {
+  _main(arguments);
+}
+
+void _main(List<String> arguments) async {
 
   // First arg is asset path
   // the rest can be forwarded to commandLineArgs
+  print("NEW HEREEE");
 
-  
   ArgParser parser = ArgParser();
 
   parser.addOption("width", abbr: "w", help: "The width of this window in pixels",
-    valueHelp: "WIDTH", defaultsTo: "400");
+      valueHelp: "WIDTH", defaultsTo: "400");
   parser.addOption("height", abbr: "h", help: "The height of this window in pixels",
-    valueHelp: "HEIGHT", defaultsTo: "600");
+      valueHelp: "HEIGHT", defaultsTo: "600");
   parser.addOption("assetsPath", help: "The absolute path to the asset directory "
       "built by runing flutter build asset");
   // TODO not used right now
   parser.addOption("dpi", help: "The DPI of the app, if not set this is calculated NOT USED RIGHT NOW",
-    valueHelp: "DPI");
+      valueHelp: "DPI");
 
 
   /// These are only here because the parser needs ever arguments that is possible. There needs to be a better solution to this
@@ -66,12 +71,15 @@ void main(List<String> arguments) {
 
   print("Started with args: $arguments");
 
+  Updater updater = Updater(true);
+   await updater.tryUpdating();
+
   if (glfw.init()) {
     final window = DesktopWindow.createSnapshotMode(
       width: width, height: height, title: "Flutter Demo",
       assetPath: assetPath, icuDataPath: "icudtl.dat",
       commandLineArgs: restArgs,
-    //  commandLineArgs: [ "app", "--dart-non-checked-mode" ],
+      //  commandLineArgs: [ "app", "--dart-non-checked-mode" ],
     );
     window.run();
     glfw.terminate();

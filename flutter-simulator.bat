@@ -1,3 +1,3 @@
 @echo off
 
-dart flutter-desktop-tools\bin\main.dart %*
+dart %~dp0flutter-desktop-tools\bin\main.dart %*

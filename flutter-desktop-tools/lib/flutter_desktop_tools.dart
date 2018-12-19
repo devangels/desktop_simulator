@@ -7,7 +7,9 @@ import 'dart:io';
 class SimulatorManager {
 
 
-  String get _jsonPath => '${Platform.environment['FLUTTER_DART_SIMULATOR']}${Platform.pathSeparator}simulator-configs.json';
+  String get _directory => File.fromUri(Platform.script).parent.parent.parent.path;
+
+  String get _jsonPath => '$_directory${Platform.pathSeparator}simulator-configs.json';
 
 
   File _getConfigFile() {
