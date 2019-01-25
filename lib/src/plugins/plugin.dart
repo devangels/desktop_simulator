@@ -114,10 +114,10 @@ class TextInputPlugin extends Plugin {
         _clientId,
         {
           'text': _text,
-          "selectionBase": _text.length,
-          "selectionExtent": _text.length,
-          "composingBase": _text.length,
-          "composingExtent": _text.length,
+          "selectionBase": _nullSafeText.length,
+          "selectionExtent": _nullSafeText.length,
+          "composingBase": _nullSafeText.length,
+          "composingExtent": _nullSafeText.length,
         },
       ]);
       // TODO abstract this into a Response object like Flutter does

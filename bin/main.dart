@@ -12,7 +12,6 @@ void _main(List<String> arguments) async {
 
   // First arg is asset path
   // the rest can be forwarded to commandLineArgs
-  print("NEW HEREEE");
 
   ArgParser parser = ArgParser();
 

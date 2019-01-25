@@ -1,1 +1,5 @@
-{"devices":[{"name":"Desktop","width":1200,"height":600},{"name":"Small","width":700,"height":400}]}
+{"devices":[
+  {"name":"Desktop","width":1200,"height":600},
+  {"name":"Phone","width":450,"height":750},
+  {"name":"Tiny","width":200,"height":320}
+]}
