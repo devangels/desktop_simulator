@@ -6,6 +6,7 @@ import 'package:desktop_simulator/src/flutter/message_codecs.dart';
 import 'package:desktop_simulator/src/plugins/plugin.dart';
 
 final jsonMethodCodec = const JSONMethodCodec();
+final jsonMessageCodec = const JSONMessageCodec();
 
 /// An interface which is exposed to the plugins.
 ///
@@ -31,6 +32,7 @@ class DesktopWindow implements EngineDelegate, NativeView {
   DesktopWindow._(this._width, this._height) {
     //TODO not the right place
     plugins.add(TextInputPlugin(this));
+    plugins.add(RawTextInputPlugin(this));
     plugins.add(DesktopPlugin(this));
     plugins.add(PlatformPlugin(this));
     plugins.add(CursorPlugin(this));
