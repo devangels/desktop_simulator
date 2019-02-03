@@ -108,6 +108,13 @@ class TextInputPlugin extends Plugin {
         _text = _nullSafeText + String.fromCharCode(charCode);
       } else if (key == GLFW_KEY_BACKSPACE) {
         _text = _nullSafeText.substring(0, math.max(0, _text.length - 1));
+      } else if(key >= GLFW_KEY_0 && key <= GLFW_KEY_9) {
+        _text = _nullSafeText + (key - GLFW_KEY_0).toString();
+      } else if(key == GLFW_KEY_ENTER) {
+        print("UpdatingENDTER");
+        final update = new MethodCall("TextInputClient.performAction", [_clientId, 'TextInputAction.send']);
+        nativeView.engine.sendPlatformMessage('flutter/textinput', jsonMethodCodec.encodeMethodCall(update));
+        return;
       }
 
       final textUpdate = new MethodCall("TextInputClient.updateEditingState", [
