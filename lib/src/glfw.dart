@@ -29,6 +29,10 @@ class Glfw {
 
   Monitor get primaryMonitor native 'glfwGetPrimaryMonitor';
 
+  set clipboard(String value) native 'glfwSetClipboardString';
+
+  String get clipboard native 'glfwGetClipboardString';
+
   static void waitEventsTimeout(double timeout) native 'glfwWaitEventsTimeout';
 
   static void windowHint(int hint, int value) native 'glfwWindowHint';
@@ -55,6 +59,9 @@ class Window {
   Rectangle<int> get size native 'glfwGetWindowSize';
 
   void setPosition(int xPos, int yPos) native 'glfwSetWindowPos';
+
+  /// Specify GLFW_DONT_CARE for parameters you don't want to set.
+  void setSizeLimits(int minWidth, int minHeight, int maxWidth, int maxHeight) native 'glfwSetWindowSizeLimits';
 
   Point<double> getCursorPos() native "glfwGetCursorPos";
 

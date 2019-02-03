@@ -1,3 +1,5 @@
+const int GLFW_DONT_CARE = -1;
+
 const int GLFW_TRUE = 1;
 const int GLFW_FALSE = 0;
 
