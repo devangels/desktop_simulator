@@ -10,6 +10,7 @@ typedef KeyFunc = void Function(Window window, int key, int scanCode, int action
 typedef MouseButtonFunc = void Function(Window window, int button, int action, int mods);
 typedef CursorPosFunc = void Function(Window window, double xpos, double ypos);
 typedef ScrollFunc = void Function(Window window, double xOffset, double yOffset);
+typedef RawKeyFunc = void Function(Window window, int codePoint, int mods);
 
 final glfw = Glfw.instance;
 
@@ -85,6 +86,8 @@ class Window {
   WindowSizeFunc setWindowSizeCallback(WindowSizeFunc windowSizeFn) native 'glfwSetWindowSizeCallback';
 
   KeyFunc setKeyCallback(KeyFunc keyFn) native 'glfwSetKeyCallback';
+
+  RawKeyFunc setRawKeyCallback(RawKeyFunc rawKeyFn) native 'glfwSetRawKeyCallback';
 
   MouseButtonFunc setMouseButtonCallback(MouseButtonFunc mouseButtonFn) native 'glfwSetMouseButtonCallback';
 

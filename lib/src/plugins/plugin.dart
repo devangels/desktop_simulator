@@ -4,6 +4,26 @@ import 'package:desktop_simulator/src/flutter/message_codecs.dart';
 import 'package:desktop_simulator/src/simulator_window.dart';
 import 'dart:math' as math;
 
+
+// https://fuchsia.googlesource.com/garnet/+/master/public/fidl/fuchsia.ui.input/input_event_constants.fidl
+int glfwModToFuchsia(int mod) {
+  switch(mod) {
+    case 1:
+      // Shift
+      return 6;
+    case 2:
+      // Control
+      return 24;
+    case 4:
+      // Alt
+      return 96;
+    case 8:
+      // Super
+      return 384;
+    default:
+      return mod;
+  }
+}
 // TODO move this somewhere else
 abstract class Result {
   void success(Map object);
@@ -71,7 +91,7 @@ class TextInputPlugin extends Plugin {
   int _clientId;
   String _text;
 
-  String get _nullSafeText => _text?? "";
+  String get _nullSafeText => _text ?? "";
 
   @override
   String get channel => 'flutter/textinput';
@@ -120,9 +140,101 @@ class TextInputPlugin extends Plugin {
           "composingExtent": _nullSafeText.length,
         },
       ]);
+
       // TODO abstract this into a Response object like Flutter does
       nativeView.engine.sendPlatformMessage('flutter/textinput', jsonMethodCodec.encodeMethodCall(textUpdate));
+
+      // Also sending raw events
+
+      //final rawUpdate = new MethodCall("")
     }
+
+    if (action == GLFW_RELEASE || action == GLFW_PRESS || action == GLFW_REPEAT) {
+      String keyType;
+      if (action == GLFW_PRESS) {
+        keyType = 'keydown';
+      } else if (action == GLFW_RELEASE) {
+        keyType = 'keyup';
+      } else if(action == GLFW_REPEAT) {
+        keyType = 'keydown';
+      } else {
+        print("Not up or down, action was $action");
+        return;
+      }
+
+      print("THE MODS IS $mods");
+
+      // Do I need this? https://www.glfw.org/docs/latest/group__keys.html
+      // "These key codes are inspired by the USB HID Usage Tables v1.12 (p. 53-60), but re-arranged to map to 7-bit ASCII for printable keys (function keys are put in the 256+ range)."
+      switch(key) {
+        case GLFW_KEY_BACKSPACE:
+          print("Sending backspace");
+          sendRawKey(0x2A, mods, keyType);
+          break;
+        case GLFW_KEY_ENTER:
+          sendRawKey(0x28, mods, keyType);
+          break;
+        case GLFW_KEY_A:
+          sendRawKey(0x04, mods, keyType);
+          break;
+        case GLFW_KEY_E:
+          sendRawKey(0x08, mods, keyType);
+          break;
+        case GLFW_KEY_K:
+          sendRawKey(0x0E, mods, keyType);
+          break;
+        case GLFW_KEY_T:
+          sendRawKey(0x17, mods, keyType);
+          break;
+        case GLFW_KEY_Y:
+          sendRawKey(0x1C, mods, keyType);
+          break;
+        case GLFW_KEY_Z:
+          sendRawKey(0x1D, mods, keyType);
+          break;
+        case GLFW_KEY_LEFT:
+          sendRawKey(0x50, mods, keyType);
+          break;
+        case GLFW_KEY_RIGHT:
+          sendRawKey(0x4F, mods, keyType);
+          break;
+        case GLFW_KEY_UP:
+          sendRawKey(0x52, mods, keyType);
+          break;
+        case GLFW_KEY_DOWN:
+          sendRawKey(0x51, mods, keyType);
+          break;
+      }
+
+    }
+  }
+
+  void sendRawKey(int hid, int mods, String keyType) {
+    print("THE MODS IS $mods");
+    final rawEvent = {'keymap': 'fuchsia', 'codePoint': 0, 'modifiers': glfwModToFuchsia(mods), 'hidUsage': hid, 'type': keyType};
+    nativeView.engine.sendPlatformMessage('flutter/keyevent', jsonMessageCodec.encodeMessage(rawEvent));
+  }
+}
+
+class RawTextInputPlugin extends Plugin {
+  RawTextInputPlugin(NativeView nativeView) : super(nativeView);
+
+  @override
+  String get channel => 'flutter/keyevent';
+
+  @override
+  void init() {
+    nativeView.window.setRawKeyCallback(_onRawKey);
+  }
+
+  @override
+  void onMethodCall(MethodCall methodCall, Result result) {}
+
+  void _onRawKey(Window window, int codePoint, int mods) {
+    print('$this.onRawKey($window, $codePoint, $mods)');
+    final rawEvent = {'keymap': 'fuchsia', 'codePoint': codePoint, 'modifiers': glfwModToFuchsia(mods), 'type': 'keydown'};
+
+    nativeView.engine.sendPlatformMessage(channel, jsonMessageCodec.encodeMessage(rawEvent));
   }
 }
 
@@ -240,7 +352,7 @@ class CursorPlugin extends Plugin {
   void onMethodCall(MethodCall methodCall, Result result) {
     if (methodCall.method == "changeCursor") {
       nativeView.window.setCursor(cursors[methodCall.arguments["cursor"]]);
-    } else if(methodCall.method == "resetCursor") {
+    } else if (methodCall.method == "resetCursor") {
       nativeView.window.setCursor(cursors["Arrow"]);
     }
   }
