@@ -21,6 +21,7 @@ void _main(List<String> arguments) async {
       valueHelp: "HEIGHT", defaultsTo: "600");
   parser.addOption("assetsPath", help: "The absolute path to the asset directory "
       "built by runing flutter build asset");
+  parser.addOption("title", defaultsTo: "Flutter App");
   // TODO not used right now
   parser.addOption("dpi", help: "The DPI of the app, if not set this is calculated NOT USED RIGHT NOW",
       valueHelp: "DPI");
@@ -53,6 +54,7 @@ void _main(List<String> arguments) async {
 
   String stringWidth = results["width"];
   String stringHeight = results["height"];
+  String title = results['title'];
 
   int width = int.tryParse(stringWidth);
   int height = int.tryParse(stringHeight);
@@ -75,7 +77,7 @@ void _main(List<String> arguments) async {
 
   if (glfw.init()) {
     final window = DesktopWindow.createSnapshotMode(
-      width: width, height: height, title: "Flutter Demo",
+      width: width, height: height, title: title,
       assetPath: assetPath, icuDataPath: "icudtl.dat",
       commandLineArgs: restArgs,
       //  commandLineArgs: [ "app", "--dart-non-checked-mode" ],

@@ -389,6 +389,16 @@ class PlatformPlugin extends Plugin {
           // System.Media.SystemSounds.Beep.Play();
         }
         break;
+      case 'Clipboard.setData':
+        Glfw.instance.clipboard = methodCall.arguments['text'];
+        result.success(null);
+        break;
+      case 'Clipboard.getData':
+        result.success({
+          'text': Glfw.instance.clipboard,
+        });
+        break;
     }
   }
 }
+
