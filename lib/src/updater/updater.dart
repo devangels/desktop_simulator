@@ -2,6 +2,14 @@ import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:path/path.dart' as p;
 
+/// Script to update the needed assets to run on desktop
+///
+/// Running a desktop application requires the engine which the assets
+/// were compiled with and a few other files.
+///
+/// When no engine is found or its hash is outdated, this script attempts to find
+/// the currently used engine hash from the Flutter installation and downloads the
+/// necessary files from the internet.
 void main(List<String> arguments) {
   Updater u = Updater(true);
   u.tryUpdating();
@@ -25,7 +33,6 @@ class Updater {
     }
   }
 
-  // TODO take a look at how to tools handle verbosity
   Future tryUpdating() async {
 
     printV("Seaching for Flutter...");

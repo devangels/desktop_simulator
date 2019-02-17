@@ -365,6 +365,8 @@ class CursorPlugin extends Plugin {
   }
 }
 
+
+/// The flutter/platform native implementation
 class PlatformPlugin extends Plugin {
   PlatformPlugin(NativeView nativeView) : super(nativeView);
 

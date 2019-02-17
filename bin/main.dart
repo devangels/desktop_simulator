@@ -70,8 +70,6 @@ void _main(List<String> arguments) async {
 
   String assetPath = results["assetsPath"];
 
-  print("Started with args: $arguments");
-
   Updater updater = Updater(true);
    await updater.tryUpdating();
 
@@ -85,33 +83,4 @@ void _main(List<String> arguments) async {
     window.run();
     glfw.terminate();
   }
-
-  /*
-  if (glfw.init()) {
-    print('GLFW: ${glfw.version}');
-    glfw.windowHint(GLFW_RESIZABLE, 1);
-    final window = glfw.createWindow(375, 625, "Flutter Demo", Monitor.None, Window.None);
-    if (window != Window.None && window != null) {
-      window.centerOnMonitor();
-
-      // FlutterEngine engine = FlutterEngine.create(delegate, args);
-      // "flutter_assets", "icudtl.dat"
-
-      final test = "hello";
-      window.setUserData(test);
-      final result = window.getUserData();
-      print('userData: ${result} ${test}');
-      print('Showing rect ${window.size}');
-      while (!window.shouldClose) {
-        glfw.waitEventsTimeout(0.1);
-      }
-      window.dispose();
-    } else {
-      print('Failed to create window.');
-    }
-    glfw.terminate();
-  } else {
-    print('Failed to initialize GLFW.');
-  }
-  */
 }

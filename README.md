@@ -78,11 +78,5 @@ To do this do the following...
 
 
 
-## Roadmap
-
-- Wrap the Window, Linux and Mac API with dart 
-    (https://github.com/AllenDang/w32) and expose as
-    a single API to dart and ultimately Flutter
-- Write widgets for every desktop use case
 
 
